@@ -1,0 +1,57 @@
+name: Compare Files with Variables and Secrets
+
+on:
+  workflow_dispatch:
+
+jobs:
+  compare_variable:
+    name: Job 1 - Compare file with repository variable
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Compare file with variable
+        run: |
+          FILE_VALUE=$(cat files/var_value.txt)
+          if [ "$FILE_VALUE" != "${{ vars.EXPECTED_VAR_VALUE }}" ]; then
+            echo "File value does not match repository variable"
+            exit 1
+          fi
+          echo "Variable comparison successful"
+
+  compare_secret:
+    name: Job 2 - Compare file with repository secret
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Compare file with secret
+        run: |
+          FILE_VALUE=$(cat files/secret_value.txt)
+          if [ "$FILE_VALUE" != "${{ secrets.EXPECTED_SECRET_VALUE }}" ]; then
+            echo "File value does not match secret"
+            exit 1
+          fi
+          echo "Secret comparison successful"
+
+  success_job:
+    name: Job 3 - Run only if previous jobs succeed
+    runs-on: ubuntu-latest
+    needs:
+      - compare_variable
+      - compare_secret
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Print values and confirm success
+        run: |
+          echo "File value: $(cat files/var_value.txt)"
+          echo "Repository variable value: ${{ vars.EXPECTED_VAR_VALUE }}"
+          echo "All checks passed successfully 🎉"
+
